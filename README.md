@@ -1,5 +1,35 @@
 # Firecracker snapshot performance testing
 
+## Performance with network
+
+```
+# network setup uses sudo to setup tap device
+$ ./network.sh
+
+$ make
+...
+Listening on http://0.0.0.0:8000/ (http://localhost:8000/)
+Warmup started
+Request 100 took 149 us.
+Request 200 took 169 us.
+Request 300 took 263 us.
+Request 400 took 211 us.
+Request 500 took 175 us.
+Request 600 took 175 us.
+Request 700 took 101 us.
+Request 800 took 251 us.
+Request 900 took 126 us.
+Request 1000 took 123 us.
+Warmup complete
+...
+... 'load snapshot' API request took 2639 us.
+...
+GET request took 3448 us.
+```
+
+
+## Performance with vsock (initial commit)
+
 ```
 $ make
 ...
@@ -24,4 +54,4 @@ GET request took 4089 us.
 
 ## Open questions
 
-* Why is this so slow compared to measuring helloworld on a local unix or tcp socket (under 100 us).
+* Why is vsock so slow?

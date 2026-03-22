@@ -1,8 +1,7 @@
 #!/bin/bash
 set -e
 
-API_SOCKET="./firecracker.sock"
-V_SOCKET="./v.sock"
+source ./common.sh
 
 # Run firecracker
 target/firecracker --api-sock "${API_SOCKET}" &
@@ -23,10 +22,10 @@ curl -X PUT --fail --unix-socket "${API_SOCKET}" \
 
 # Set boot source
 curl -X PUT --fail --unix-socket "${API_SOCKET}" \
-  --data '{
-    "kernel_image_path": "target/vmlinux",
-    "boot_args": "console=ttyS0 reboot=k panic=1 DENO_SERVE_ADDRESS=vsock:3:8000 -- helloworld"
-  }' \
+  --data "{
+    \"kernel_image_path\": \"target/vmlinux\",
+    \"boot_args\": \"console=ttyS0 reboot=k panic=1 DENO_SERVE_ADDRESS=tcp:0.0.0.0:8000 ip=${FC_IP}::${TAP_IP}:${MASK_LONG}::eth0:off -- helloworld\"
+  }" \
     "http://localhost/boot-source"
 
 # Set rootfs
@@ -47,6 +46,15 @@ curl -X PUT --fail --unix-socket "${API_SOCKET}" \
   }' \
   "http://localhost/vsock"
 
+# Set network interface
+curl -X PUT --fail --unix-socket "${API_SOCKET}" \
+    --data "{
+        \"iface_id\": \"net1\",
+        \"guest_mac\": \"$FC_MAC\",
+        \"host_dev_name\": \"$TAP_DEV\"
+    }" \
+    "http://localhost/network-interfaces/net1"
+
 # Start microVM
 curl -X PUT --fail --unix-socket "${API_SOCKET}" \
   --data '{
@@ -60,7 +68,7 @@ sleep 1s
 # Warmup requests (CONNECT is from the vsock protocol)
 echo "Warmup started"
 for i in {1..1000}; do
-  duration_us=$(target/measurefvsock "$V_SOCKET");
+  duration_us=$(target/measure "$FC_IP" 8000);
   # start=$EPOCHREALTIME
   # output=$(printf "CONNECT 8000\nGET http://example.com/ HTTP/1.1\r\nHost: example.com\r\nConnection: close\r\n\r\n" | nc -U ./v.sock)
   # end=$EPOCHREALTIME
@@ -85,6 +93,8 @@ for i in {1..1000}; do
 #   fi
 done
 echo "Warmup complete"
+
+curl -v http://$FC_IP:8000/
 
 # Pause microVM
 curl -X PATCH --fail --unix-socket "${API_SOCKET}" \

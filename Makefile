@@ -36,10 +36,10 @@ target/helloworld:
 		-o target/helloworld \
 		'data:,Deno.serve(() => new Response("Hello, World!"))'
 
-target/helloworld.snapshot target/helloworld.mem &: target/firecracker target/root.squashfs target/vmlinux target/measurefvsock snapshot.sh
+target/helloworld.snapshot target/helloworld.mem &: target/firecracker target/root.squashfs target/vmlinux target/measurefvsock snapshot.sh common.sh
 	./snapshot.sh
 
-snaprun: target/firecracker target/root.squashfs target/helloworld.snapshot target/helloworld.mem target/measurefvsock snaprun.sh
+snaprun: target/firecracker target/root.squashfs target/helloworld.snapshot target/helloworld.mem target/measurefvsock snaprun.sh common.sh
 	./snaprun.sh
 
 target/measure: measure.cpp

@@ -1,8 +1,7 @@
 #!/bin/bash
 set -e
 
-API_SOCKET="./firecracker.sock"
-V_SOCKET="./v.sock"
+source common.sh
 
 # Run firecracker
 target/firecracker --api-sock "${API_SOCKET}" &
@@ -23,7 +22,7 @@ curl -X PUT --unix-socket "${API_SOCKET}" \
 
 # Request
 
-duration_us=$(target/measurefvsock "$V_SOCKET");
+duration_us=$(target/measure "$FC_IP" 8000);
 echo "GET request took $duration_us us."
 
 # start=$EPOCHREALTIME
