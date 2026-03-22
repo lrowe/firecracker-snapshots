@@ -5,7 +5,7 @@ FIRECRACKER_CI = https://s3.amazonaws.com/spec.ccfc.min/firecracker-ci/20260318-
 FIRECRACKER_VERSION = v1.15.0
 FIRECRACKER_SUFFIX = -$(FIRECRACKER_VERSION)-$(ARCH)
 
-all: snaprun target/measure target/measurefvsock target/measureunix
+all: snaprun target/measure target/measurefvsock target/measureunix target/measurevsock
 
 clean:
 	rm -rf target
@@ -50,3 +50,6 @@ target/measurefvsock: measurefvsock.cpp
 
 target/measureunix: measureunix.cpp
 	g++ -o $@ measureunix.cpp -std=c++20 -pthread
+
+target/measurevsock: measurevsock.cpp
+	g++ -o $@ measurevsock.cpp -std=c++20 -pthread

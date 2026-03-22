@@ -55,3 +55,24 @@ GET request took 4089 us.
 ## Open questions
 
 * Why is vsock so slow?
+
+Local vsock seems to be slow...
+
+```
+$ DENO_SERVE_ADDRESS=vsock:1:8000 ./target/helloworld
+```
+
+```
+$ for i in {1..1000}; do target/measurevsock 1 8000; done
+...
+746
+1062
+761
+805
+999
+1868
+1756
+1693
+1703
+1721
+```
