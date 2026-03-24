@@ -1,6 +1,16 @@
 # Firecracker snapshot performance testing
 
+## Data read from memory file
+
+Requires nbdkit and bindfs.
+
+```
+Read 52084 KB across 447 calls.
+```
+
 ## Performance with network
+
+[Commit](https://github.com/lrowe/firecracker-snapshots/commit/6e2dd47f0fa9259e4ab5b1fd43e182b2631a44f9)
 
 ```
 # network setup uses sudo to setup tap device
@@ -28,7 +38,9 @@ GET request took 3448 us.
 ```
 
 
-## Performance with vsock (initial commit)
+## Performance with vsock
+
+[Commit](https://github.com/lrowe/firecracker-snapshots/commit/fdab2e5372d8ede8f4572790284f1e455264ff57)
 
 ```
 $ make

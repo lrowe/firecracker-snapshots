@@ -38,13 +38,13 @@ curl -X PUT --fail --unix-socket "${API_SOCKET}" \
   }' \
   "http://localhost/drives/rootfs"
 
-# Set vsock
-curl -X PUT --fail --unix-socket "${API_SOCKET}" \
-  --data '{
-    "guest_cid": 3,
-    "uds_path": "./v.sock"
-  }' \
-  "http://localhost/vsock"
+# # Set vsock
+# curl -X PUT --fail --unix-socket "${API_SOCKET}" \
+#   --data "{
+#     \"guest_cid\": 3,
+#     \"uds_path\": \"${V_SOCKET}\"
+#   }" \
+#   "http://localhost/vsock"
 
 # Set network interface
 curl -X PUT --fail --unix-socket "${API_SOCKET}" \

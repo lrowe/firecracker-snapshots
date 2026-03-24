@@ -14,14 +14,11 @@ target/vmlinux:
 	mkdir -p target
 	curl -L -o $@ $(FIRECRACKER_CI)/vmlinux-6.1.164
 
-target/firecracker$(FIRECRACKER_SUFFIX):
-	mkdir -p $@
-	curl -L https://github.com/firecracker-microvm/firecracker/releases/download/$(FIRECRACKER_VERSION)/firecracker$(FIRECRACKER_SUFFIX).tgz | tar -xz --strip-components=1 -C $@
-	cd target/firecracker; for f in *$(FIRECRACKER_SUFFIX); do ln -s "$$f" "$${f%$(FIRECRACKER_SUFFIX)}"; done
-
-target/firecracker: target/firecracker$(FIRECRACKER_SUFFIX)
-	rm -f $@
-	ln -s firecracker$(FIRECRACKER_SUFFIX)/firecracker$(FIRECRACKER_SUFFIX) target/firecracker
+target/firecracker:
+	rm -rf target/release$(FIRECRACKER_SUFFIX) target/firecracker
+	mkdir -p target
+	curl -L https://github.com/firecracker-microvm/firecracker/releases/download/$(FIRECRACKER_VERSION)/firecracker$(FIRECRACKER_SUFFIX).tgz | tar -xz -C target
+	ln -s release$(FIRECRACKER_SUFFIX)/firecracker$(FIRECRACKER_SUFFIX) target/firecracker
 
 target/root.squashfs: Dockerfile init.sh target/helloworld
 	rm -f $@
@@ -39,7 +36,7 @@ target/helloworld:
 target/helloworld.snapshot target/helloworld.mem &: target/firecracker target/root.squashfs target/vmlinux target/measurefvsock snapshot.sh common.sh
 	./snapshot.sh
 
-snaprun: target/firecracker target/root.squashfs target/helloworld.snapshot target/helloworld.mem target/measurefvsock snaprun.sh common.sh
+snaprun: target/firecracker target/root.squashfs target/helloworld.snapshot target/helloworld.mem target/measurefvsock snaprun.sh common.sh target/dev/nbd0 target/mnt
 	./snaprun.sh
 
 target/measure: measure.cpp
@@ -53,3 +50,10 @@ target/measureunix: measureunix.cpp
 
 target/measurevsock: measurevsock.cpp
 	g++ -o $@ measurevsock.cpp -std=c++20 -pthread
+
+target/dev/nbd0:
+	mkdir -p target/dev
+	ln -s /dev/nbd0 target/dev/
+
+target/mnt:
+	mkdir -p target/mnt

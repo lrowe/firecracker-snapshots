@@ -1,5 +1,5 @@
-API_SOCKET="./firecracker.sock"
-V_SOCKET="./v.sock"
+API_SOCKET="target/firecracker.sock"
+V_SOCKET="target/v.sock"
 
 TAP_DEV="tap0"
 MASK_LONG="255.255.255.252"
