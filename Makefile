@@ -1,4 +1,4 @@
-.PHONY: all clean snaprun
+.PHONY: all clean snaprun kvmserver-snaprun
 
 ARCH := $(shell uname -m)
 FIRECRACKER_CI = https://s3.amazonaws.com/spec.ccfc.min/firecracker-ci/20260318-4392a8d19ab0-0/x86_64
@@ -57,3 +57,15 @@ target/dev/nbd0:
 
 target/mnt:
 	mkdir -p target/mnt
+
+target/kvmserver:
+	mkdir -p target
+	curl -L https://github.com/libriscv/kvmserver/releases/download/v0.2.0/kvmserver.gz | gunzip > $@
+	chmod +x $@
+
+target/helloworld.kvmserver: target/kvmserver target/helloworld
+	mkdir -p target
+	target/kvmserver --allow-all --ephemeral --warmup 1000 snapshot -o target/helloworld.kvmserver target/helloworld
+
+kvmserver-snaprun: target/kvmserver target/helloworld.kvmserver
+	./kvmserver-snaprun.sh
