@@ -1,12 +1,23 @@
 # Firecracker snapshot performance testing
 
+## Data read from uffd
+
+```
+GET request took 15001 us.
+Read 5756 KB across 1439 calls.
+```
+
 ## Data read from memory file
+
+[Commit](https://github.com/lrowe/firecracker-snapshots/commit/90c3af6756741dc5d6f15b694a9b97bbf1ad0ed8)
 
 Requires nbdkit and bindfs.
 
 ```
 Read 52084 KB across 447 calls.
 ```
+
+Note that this includes readahead since there is no MADV_RANDOM.
 
 ## Performance with network
 

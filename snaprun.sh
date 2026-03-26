@@ -2,13 +2,14 @@
 set -e
 
 source common.sh
-NBD_SOCKET="target/nbd.sock"
+UFFD_SOCKET="target/uffd.sock"
 
-trap "echo TRAP; rm -f $API_SOCKET $V_SOCKET $NBD_SOCKET; pkill -TERM -P $$; sudo umount target/mnt; sudo nbd-client -d /dev/nbd0; wait" INT TERM EXIT
+trap "echo TRAP; rm -f $API_SOCKET $V_SOCKET $UFFD_SOCKET; pkill -TERM -P $$; sudo setfacl -x u:${USER}: /dev/userfaultfd; wait" INT TERM EXIT
 
-nbdkit -f -v --readonly --unix $NBD_SOCKET file target/helloworld.mem 2> target/nbd.log &
-sudo nbd-client -readonly -unix $NBD_SOCKET /dev/nbd0
-sudo bindfs -p fo+r --block-devices-as-files --resolve-symlinks target/dev target/mnt
+sudo setfacl -m u:${USER}:rw /dev/userfaultfd
+
+./on_demand_handler.rs "${UFFD_SOCKET}" target/helloworld.mem > target/uffd.log &
+sleep 1s
 # Run firecracker
 target/firecracker --api-sock "${API_SOCKET}" &
 PID=$!
@@ -18,8 +19,8 @@ curl -X PUT --unix-socket "${API_SOCKET}" \
   --data '{
     "snapshot_path": "target/helloworld.snapshot",
     "mem_backend": {
-      "backend_path": "target/mnt/nbd0",
-      "backend_type": "File"
+      "backend_path": "target/uffd.sock",
+      "backend_type": "Uffd"
     },
     "resume_vm": true
   }' \
@@ -28,7 +29,7 @@ curl -X PUT --unix-socket "${API_SOCKET}" \
 # Request
 
 duration_us=$(target/measure "$FC_IP" 8000);
-echo "GET request took $duration_us us. (Slow due to nbd.)"
+echo "GET request took $duration_us us."
 
 # start=$EPOCHREALTIME
 # output=$(printf "CONNECT 8000\nGET http://example.com/ HTTP/1.1\r\nHost: example.com\r\nConnection: close\r\n\r\n" | nc -U ./v.sock)
@@ -55,16 +56,15 @@ echo "GET request took $duration_us us. (Slow due to nbd.)"
 # fi
 
 # Cleanup
-rm -f $API_SOCKET $V_SOCKET $NBD_SOCKET
+rm -f $API_SOCKET $V_SOCKET $UFFD_SOCKET
 kill -TERM $PID || true
 wait $PID || true
-sudo umount target/mnt
-sudo nbd-client -d /dev/nbd0
+sudo setfacl -x u:${USER}: /dev/userfaultfd
 pkill -TERM -P $$ || true
 trap - INT TERM EXIT
 wait || true
 
-reads=( $(grep -P -o '(?<=pread.count=)[0-9]+' <target/nbd.log) )
+reads=( $(grep -P -o '(?<=count=)[0-9]+' <target/uffd.log) )
 sum=0
 for num in "${reads[@]}"; do
   ((sum += num))
